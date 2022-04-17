@@ -43,8 +43,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Create a new instance of the Movie struct, containing the ID we extracted from
-	// the URL and some dummy data. Also notice that we deliberately haven't set a
-	// value for the Year field.
+	// the URL and some dummy data.
 	movie := data.Movie{
 		ID:        id,
 		CreatedAt: time.Now(),

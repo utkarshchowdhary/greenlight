@@ -78,9 +78,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
 		// A json.InvalidUnmarshalError error will be returned if we pass a non-nil
 		// pointer to Decode(). We catch this and panic, rather than returning an error
-		// to our handler. At the end of this chapter we'll talk about panicking
-		// versus returning errors, and discuss why it's an appropriate thing to do in
-		// this specific situation.
+		// to our handler.
 		case errors.As(err, &invalidUnmarshalError):
 			panic(err)
 		// For anything else, return the error message as-is.
