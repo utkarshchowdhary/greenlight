@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"greenlight/internal/data"
+	"greenlight/internal/jsonlog"
 	"log"
 	"net/http"
 	"os"
@@ -33,7 +34,7 @@ type config struct {
 // and middleware.
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -61,25 +62,28 @@ func main() {
 
 	flag.Parse()
 
-	// Initialize a new logger which writes messages to the standard out stream,
-	// prefixed with the current date and time.
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	// Initialize a new jsonlog.Logger which writes any messages *at or above* the INFO
+	// severity level to the standard out stream.
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	// Call the openDB() helper function to create the connection pool,
 	// passing in the config struct. If this returns an error, we log it and exit the
 	// application immediately.
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		// Use the PrintFatal() method to write a log entry containing the error at the
+		// FATAL level and exit. We have no additional properties to include in the log
+		// entry, so we pass nil as the second parameter.
+		logger.PrintFatal(err, nil)
 	}
 
 	// Defer a call to db.Close() so that the connection pool is closed before the
 	// main() function exits.
 	defer db.Close()
 
-	// Also log a message to say that the connection pool has been successfully
-	// established.
-	logger.Printf("database connection pool established")
+	// Likewise use the PrintInfo() method to write a message at the INFO level.
+	// to say that the connection pool has been successfully established.
+	logger.PrintInfo("database connection pool established", nil)
 
 	// Declare an instance of the application struct, containing the config struct and
 	// the logger.
@@ -90,16 +94,26 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
+		Addr:    fmt.Sprintf(":%d", cfg.port),
+		Handler: app.routes(),
+		// Create a new Go log.Logger instance with the log.New() function, passing in
+		// our custom Logger as the first parameter. The "" and 0 indicate that the
+		// log.Logger instance should not use a prefix or any flags.
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
+	// Again, we use the PrintInfo() method to write a "starting server" message at the
+	// INFO level. But this time we pass a map containing additional properties (the
+	// operating environment and server address) as the final parameter.
+	logger.PrintInfo("starting server", map[string]string{
+		"addr": srv.Addr,
+		"env":  cfg.env,
+	})
 	// Start the HTTP server.
-	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
-	logger.Fatal(srv.ListenAndServe())
+	logger.PrintFatal(srv.ListenAndServe(), nil)
 }
 
 // The openDB() function returns a sql.DB connection pool.
