@@ -38,6 +38,14 @@ type password struct {
 	hash      []byte
 }
 
+// Declare a AnonymousUser variable.
+var AnonymousUser = &User{}
+
+// Check if a User instance is the AnonymousUser.
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
 // The Set() method calculates the bcrypt hash of a plaintext password, and stores both
 // the hash and the plaintext versions in the struct.
 func (p *password) Set(plaintextPassword string) error {
