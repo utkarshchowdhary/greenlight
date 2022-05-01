@@ -136,8 +136,8 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		// "Bearer <token>". We try to split this into its constituent parts, and if the
 		// header isn't in the expected format we return a 401 Unauthorized response
 		// using the invalidAuthenticationTokenResponse() helper.
-		headerParts := strings.Split(authorizationHeader, " ")
-		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		headerParts := strings.Fields(authorizationHeader)
+		if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
