@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	"greenlight/internal/data"
 	"greenlight/internal/jsonlog"
 	"greenlight/internal/mailer"
@@ -17,8 +18,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Declare a string containing the application version number.
-const version = "1.0.0"
+// buildTime variable to hold the executable binary build time.
+// version variable to hold the application version number.
+// These must be of string type, as the -X linker flag will only work with string variables.
+var (
+	buildTime string
+	version   string
+)
 
 // Define a config struct to hold all the configuration settings for our application.
 type config struct {
@@ -68,10 +74,8 @@ func main() {
 	// default to using environment "development" if no corresponding flag is provided.
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	// Read the DSN value from the db-dsn command-line flag into the config struct. We
-	// default to using the value of the DATABASE_URL environment variable
-	// if no flag is provided.
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("DATABASE_URL"), "PostgreSQL DSN")
+	// Read the DSN value from the db-dsn command-line flag into the config struct.
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 
 	// Read the connection pool settings from command-line flags into the config struct.
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
@@ -84,8 +88,8 @@ func main() {
 	// Read the SMTP server configuration settings into the config struct.
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailgun.org", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 587, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.com>", "SMTP sender")
 
 	// The flag.Func() function process the -cors-trusted-origins command line flag.
@@ -99,7 +103,18 @@ func main() {
 		return nil
 	})
 
+	// Create a new version boolean flag with the default value of false.
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
+
+	// If the version flag value is true, then print out the version number and
+	// immediately exit.
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		fmt.Printf("Build time:\t%s\n", buildTime)
+		os.Exit(0)
+	}
 
 	// Initialize a new jsonlog.Logger which writes any messages *at or above* the INFO
 	// severity level to the standard out stream.
