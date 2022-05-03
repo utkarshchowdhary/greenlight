@@ -18,8 +18,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// buildTime variable to hold the executable binary build time.
-// version variable to hold the application version number.
+// buildTime variable holds the executable binary build time.
+// version variable holds the application version number.
 // These must be of string type, as the -X linker flag will only work with string variables.
 var (
 	buildTime string
@@ -67,8 +67,8 @@ func main() {
 	var cfg config
 
 	// Read the value of the port command-line flag into the config struct. We
-	// default to using the port number 80 if no corresponding flag is provided.
-	flag.IntVar(&cfg.port, "port", 80, "API server port")
+	// default to using the port number 8080 if no corresponding flag is provided.
+	flag.IntVar(&cfg.port, "port", 8080, "API server port")
 
 	// Read the value of the env command-line flag into the config struct. We
 	// default to using environment "development" if no corresponding flag is provided.
@@ -108,8 +108,8 @@ func main() {
 
 	flag.Parse()
 
-	// If the version flag value is true, then print out the version number and
-	// immediately exit.
+	// If the version flag value is true, then print out the version number and build time
+	// then immediately exit.
 	if *displayVersion {
 		fmt.Printf("Version:\t%s\n", version)
 		fmt.Printf("Build time:\t%s\n", buildTime)
@@ -140,7 +140,7 @@ func main() {
 	logger.PrintInfo("database connection pool established", nil)
 
 	// Publish a new "version" variable in the expvar handler containing our application
-	// version number (currently the constant "1.0.0").
+	// version number.
 	expvar.NewString("version").Set(version)
 
 	// Publish the number of active goroutines.
@@ -158,8 +158,8 @@ func main() {
 		return time.Now().Unix()
 	}))
 
-	// Declare an instance of the application struct, containing the config struct and
-	// the logger.
+	// Declare an instance of the application struct, containing the config struct,
+	// the logger, the models and the mailer.
 	app := &application{
 		config: cfg,
 		logger: logger,

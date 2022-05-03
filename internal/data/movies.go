@@ -83,7 +83,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 		// Initialize an empty Movie struct to hold the data for an individual movie.
 		var movie Movie
 
-		// Scan the values from the row into the Movie struct. Again, note that we're
+		// Scan the values from the row into the Movie struct. Again we're
 		// using the pq.Array() adapter on the genres field here.
 		err := rows.Scan(
 			&totalRecords,
@@ -95,6 +95,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 			pq.Array(&movie.Genres),
 			&movie.Version,
 		)
+
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -102,6 +103,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 		// Add the Movie struct to the slice.
 		movies = append(movies, &movie)
 	}
+
 	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error
 	// that was encountered during the iteration.
 	if err = rows.Err(); err != nil {
@@ -127,8 +129,7 @@ func (m MovieModel) Insert(movie *Movie) error {
 	RETURNING id, created_at, version`
 
 	// Create an args slice containing the values for the placeholder parameters from
-	// the movie struct. Declaring this slice immediately next to our SQL query helps to
-	// make it nice and clear *what values are being used where* in the query.
+	// the movie struct.
 	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 
 	// Create a context with a 3-second timeout.
@@ -170,8 +171,8 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 
 	// Execute the query using the QueryRow() method, passing in the provided id value
 	// as a placeholder parameter, and scan the response data into the fields of the
-	// Movie struct. Importantly, notice that we need to convert the scan target for the
-	// genres column using the pq.Array() adapter function again.
+	// Movie struct. Importantly, We need to convert the scan target for the genres
+	// column using the pq.Array() adapter function.
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&movie.ID,
 		&movie.CreatedAt,

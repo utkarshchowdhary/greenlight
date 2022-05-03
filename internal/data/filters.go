@@ -56,9 +56,9 @@ type Metadata struct {
 }
 
 // The calculateMetadata() function calculates the appropriate pagination metadata
-// values given the total number of records, current page, and page size values. Note
-// that the last page value is calculated using the math.Ceil() function, which rounds
-// up a float to the nearest integer.
+// values given the total number of records, current page, and page size values. The
+// last page value is calculated using the math.Ceil() function, which rounds up a
+// float to the nearest integer.
 func calculateMetadata(totalRecords, page, pageSize int) Metadata {
 	if totalRecords == 0 {
 		// Note that we return an empty Metadata struct if there are no records.
