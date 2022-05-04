@@ -82,6 +82,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 		// Lock the mutex to prevent this code from being executed concurrently.
 		mu.Lock()
+
 		// Check to see if the IP address already exists in the map. If it doesn't, then
 		// initialize a new rate limiter which allows an average of 2 requests per second,
 		// with a maximum of 4 requests in a single 'burst' and add the IP address and
@@ -96,12 +97,13 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 		// Call the Allow() method on the rate limiter for the current IP address. If
 		// the request isn't allowed, unlock the mutex and send a 429 Too Many Requests
-		// response, just like before.
+		// response.
 		if !clients[ip].limiter.Allow() {
 			mu.Unlock()
 			app.rateLimitExceededResponse(w, r)
 			return
 		}
+
 		// Unlock the mutex before calling the next handler in the
 		// chain. We DON'T use defer to unlock the mutex, as that would mean
 		// that the mutex isn't unlocked until all the handlers downstream of this
@@ -295,8 +297,8 @@ func (app *application) metrics(next http.Handler) http.Handler {
 	totalRequestsReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSent := expvar.NewInt("total_responses_sent")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")
-	// Declare a new expvar map to hold the count of responses for each HTTP status
-	// code.
+	// Declare a new expvar map to hold the count of responses for each
+	// HTTP status code.
 	totalResponsesSentByStatus := expvar.NewMap("total_responses_sent_by_status")
 
 	// The following code will be run for every request.
