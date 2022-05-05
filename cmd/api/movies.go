@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// listMoviesHandler for the "GET /v1/movies" endpoint.
 func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
 	// To keep things consistent with our other handlers, we'll define an input struct
 	// to hold the expected values from the request query string.
@@ -66,9 +67,8 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 // createMovieHandler for the "POST /v1/movies" endpoint.
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	// Declare an anonymous struct to hold the information that we expect to be in the
-	// HTTP request body (note that the field names and types in the struct are a subset
-	// of the Movie struct that we created earlier). This struct will be our *target
-	// decode destination.
+	// HTTP request body (the field names and types in the struct are a subset
+	// of the Movie struct). This struct will be our target decode destination.
 	var input struct {
 		Title   string       `json:"title"`
 		Year    int32        `json:"year"`
@@ -95,6 +95,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	// Initialize a new Validator.
 	v := validator.New()
+
 	// Call the ValidateMovie() function and return a response containing the errors if
 	// any of the checks fail.
 	if data.ValidateMovie(v, movie); !v.Valid() {
@@ -163,6 +164,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.notFoundResponse(w, r)
 		return
 	}
+
 	// Fetch the existing movie record from the database, sending a 404 Not Found
 	// response to the client if we couldn't find a matching record.
 	movie, err := app.models.Movies.Get(id)
@@ -175,6 +177,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
 	// Declare an input struct to hold the expected data from the client.
 	var input struct {
 		Title   *string       `json:"title"`
@@ -182,6 +185,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		Runtime *data.Runtime `json:"runtime"`
 		Genres  []string      `json:"genres"`
 	}
+
 	// Read the JSON request body data into the input struct.
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -215,6 +219,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
+
 	// Pass the updated movie record to our new Update() method.
 	// Intercept any ErrEditConflict error and call the editConflictResponse()
 	// helper.
@@ -228,6 +233,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
 	// Write the updated movie record in a JSON response.
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
@@ -243,6 +249,7 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.notFoundResponse(w, r)
 		return
 	}
+
 	// Delete the movie from the database, sending a 404 Not Found response to the
 	// client if there isn't a matching record.
 	err = app.models.Movies.Delete(id)
@@ -255,6 +262,7 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
 	// Return a 200 OK status code along with a success message.
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "movie successfully deleted"}, nil)
 	if err != nil {

@@ -121,8 +121,9 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Validate the plaintext token provided by the client.
 	v := validator.New()
+
+	// Validate the plaintext token provided by the client.
 	if data.ValidateTokenPlaintext(v, input.TokenPlaintext); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
