@@ -86,11 +86,11 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 
 	// Read the SMTP server configuration settings into the config struct.
-	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailgun.org", "SMTP host")
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 587, "SMTP port")
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.com>", "SMTP sender")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "", "SMTP sender")
 
 	// The flag.Func() function process the -cors-trusted-origins command line flag.
 	// In this we use the strings.Fields() function to split the flag value into a
