@@ -17,7 +17,7 @@ help:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	go run ./cmd/api -db-dsn=${DATABASE_URL} -smtp-host=${SMTP_HOST} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD} -smtp-sender=${SMTP_SENDER}
+	go run ./cmd/api -db-dsn=${DATABASE_URL} -sendgrid-apikey=${SENDGRID_API_KEY} -sendgrid-sender=${SENDGRID_SENDER}
 
 # ==================================================================================== #
 # QUALITY CONTROL

@@ -1,5 +1,3 @@
 export DATABASE_URL=''
-export SMTP_HOST=''
-export SMTP_USERNAME=''
-export SMTP_PASSWORD=''
-export SMTP_SENDER=''
+export SENDGRID_API_KEY=''
+export SENDGRID_SENDER=''

@@ -2,11 +2,13 @@ package mailer
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"html/template"
 	"time"
 
-	"gopkg.in/mail.v2"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 // Below we declare a new variable with the type embed.FS (embedded file system) to hold
@@ -17,23 +19,21 @@ import (
 //go:embed "templates"
 var templateFS embed.FS
 
-// Define a Mailer struct which contains a mail.Dialer instance (used to connect to a
-// SMTP server) and the sender information for your emails (the name and address you
+// Define a Mailer struct which contains a sendgrid.Client instance
+// and the sender information for your emails (the name and address you
 // want the email to be from).
 type Mailer struct {
-	dialer *mail.Dialer
+	client *sendgrid.Client
 	sender string
 }
 
-func New(host string, port int, username, password, sender string) Mailer {
-	// Initialize a new mail.Dialer instance with the given SMTP server settings. We
-	// also configure this to use a 5-second timeout whenever we send an email.
-	dialer := mail.NewDialer(host, port, username, password)
-	dialer.Timeout = 5 * time.Second
+func New(apikey, sender string) Mailer {
+	// Initialize a new sendgrid.Client instance with the given apikey.
+	client := sendgrid.NewSendClient(apikey)
 
-	// Return a Mailer instance containing the dialer and sender information.
+	// Return a Mailer instance containing the client and sender information.
 	return Mailer{
-		dialer: dialer,
+		client: client,
 		sender: sender,
 	}
 }
@@ -71,26 +71,24 @@ func (m Mailer) Send(recipient, templateFile string, data interface{}) error {
 		return err
 	}
 
-	// Use the mail.NewMessage() function to initialize a new mail.Message instance.
-	// Then we use the SetHeader() method to set the email recipient, sender and subject
-	// headers, the SetBody() method to set the plain-text body, and the AddAlternative()
-	// method to set the HTML body. It's important to note that AddAlternative() should
-	// always be called *after* SetBody().
-	msg := mail.NewMessage()
-	msg.SetHeader("To", recipient)
-	msg.SetHeader("From", m.sender)
-	msg.SetHeader("Subject", subject.String())
-	msg.SetBody("text/plain", plainBody.String())
-	msg.AddAlternative("text/html", htmlBody.String())
+	// Use the mail.NewSingleEmail() function to construct the message.
+	msg := mail.NewSingleEmail(
+		mail.NewEmail("", m.sender),
+		subject.String(),
+		mail.NewEmail("", recipient),
+		plainBody.String(),
+		htmlBody.String(),
+	)
 
 	// Try sending the email up to three times before aborting and returning the final
 	// error. We sleep for 500 milliseconds between each attempt.
 	for i := 1; i <= 3; i++ {
-		// Call the DialAndSend() method on the dialer, passing in the message to send. This
-		// opens a connection to the SMTP server, sends the message, then closes the
-		// connection. If there is a timeout, it will return a "dial tcp: i/o timeout"
-		// error.
-		err = m.dialer.DialAndSend(msg)
+		// Create a context with a 5-second timeout.
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Call the SendWithContext() method on the client, passing in the message to send.
+		_, err = m.client.SendWithContext(ctx, msg)
 		if err == nil {
 			return nil
 		}
