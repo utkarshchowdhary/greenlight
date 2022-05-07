@@ -5,10 +5,15 @@ include .envrc
 # HELPERS
 # ==================================================================================== #
 
-## help: print this help message
+## help: print the help message
+.PHONY: help
 help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'
+
+.PHONY: confirm
+confirm:
+	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
 # ==================================================================================== #
 # DEVELOPMENT
@@ -17,7 +22,19 @@ help:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	go run ./cmd/api -db-dsn=${DATABASE_URL} -sendgrid-apikey=${SENDGRID_API_KEY} -sendgrid-sender=${SENDGRID_SENDER}
+	go run ./cmd/api -db-dsn=${GREENLIGHT_DB_DSN} -sendgrid-apikey=${SENDGRID_API_KEY} -sendgrid-sender=${SENDGRID_SENDER}
+
+## db/migrations/new name=$1: create a new database migration
+.PHONY: db/migrations/new
+db/migrations/new: confirm
+	@echo 'Creating migration files for ${name}...'
+	migrate create -seq -ext=.sql -dir=./migrations ${name}
+
+## db/migrations/up: apply all up database migrations
+.PHONY: db/migrations/up
+db/migrations/up:
+	@echo 'Running up migrations...'
+	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
 
 # ==================================================================================== #
 # QUALITY CONTROL
